@@ -1,0 +1,394 @@
+{
+  "api_vulnerabilities": [
+    {
+      "code": "BOLA-001",
+      "name": "Broken Object Level Authorization",
+      "description": "Нарушение авторизации на уровне объектов: доступ к ресурсам других пользователей путем подстановки идентификатора объекта в запросе",
+      "severity": "CRITICAL",
+      "detection_method": "GET /users/123 (замена ID на чужой)",
+      "recommendation": "Внедрить проверку владения объектом (Object Ownership Verification) с использованием user_id из JWT токена",
+      "source": "OWASP API Security Top 10 #1",
+      "link": "https://owasp.org/API-Security/editions/2023/en/0xa1-broken-object-level-authorization/"
+    },
+    {
+      "code": "AUTH-001",
+      "name": "Broken Authentication",
+      "description": "Компрометация механизма аутентификации: слабые пароли, отсутствие MFA, перехват токенов",
+      "severity": "CRITICAL",
+      "detection_method": "POST /login с brute-force или слабым паролем",
+      "recommendation": "Внедрить многофакторную аутентификацию (MFA), rate limiting, безопасное хранение паролей (bcrypt/Argon2)",
+      "source": "OWASP API Security Top 10 #2",
+      "link": "https://owasp.org/API-Security/editions/2023/en/0xa2-broken-authentication/"
+    },
+    {
+      "code": "BOPLA-001",
+      "name": "Broken Object Property Level Authorization",
+      "description": "Нарушение авторизации на уровне свойств: модификация недоступных полей объекта (is_admin, balance)",
+      "severity": "HIGH",
+      "detection_method": "PATCH /users/123 с {'is_admin': true}",
+      "recommendation": "Реализовать Field-Level Authorization с белым списком разрешенных полей для каждого роли",
+      "source": "OWASP API Security Top 10 #3",
+      "link": "https://owasp.org/API-Security/editions/2023/en/0xa3-broken-object-property-level-authorization/"
+    },
+    {
+      "code": "MASS-001",
+      "name": "Mass Assignment",
+      "description": "Массовое назначение свойств: сервер применяет все поля из запроса без фильтрации привилегированных атрибутов",
+      "severity": "HIGH",
+      "detection_method": "POST /users с {'admin': true, 'balance': 999999}",
+      "recommendation": "Использовать whitelist подход: явно определять разрешенные поля для каждого эндпоинта",
+      "source": "OWASP API Security Top 10 #4",
+      "link": "https://owasp.org/API-Security/editions/2019/en/0-a6-mass-assignment/"
+    },
+    {
+      "code": "EXPOS-001",
+      "name": "Excessive Data Exposure",
+      "description": "Чрезмерное раскрытие данных: API возвращает конфиденциальные поля (пароли, API ключи, внутренние ID)",
+      "severity": "HIGH",
+      "detection_method": "GET /users/123 возвращает hashed_password, internal_notes",
+      "recommendation": "Внедрить Data Masking и минимально необходимые поля (Principle of Least Privilege)",
+      "source": "OWASP API Security Top 10 #5",
+      "link": "https://owasp.org/API-Security/editions/2019/en/0-a3-excessive-data-exposure/"
+    },
+    {
+      "code": "FUNC-001",
+      "name": "Broken Function Level Authorization",
+      "description": "Нарушение авторизации на уровне функций: обычный пользователь выполняет административные операции",
+      "severity": "HIGH",
+      "detection_method": "POST /admin/delete-user от обычного пользователя",
+      "recommendation": "Реализовать Role-Based Access Control (RBAC) с проверкой ролей на каждом эндпоинте",
+      "source": "OWASP API Security Top 10 #6",
+      "link": "https://owasp.org/API-Security/editions/2023/en/0xa5-broken-function-level-authorization/"
+    },
+    {
+      "code": "RATL-001",
+      "name": "Lack of Resources & Rate Limiting",
+      "description": "Отсутствие ограничения скорости: возможность DoS, brute-force, resource exhaustion",
+      "severity": "HIGH",
+      "detection_method": "1000+ запросов/мин без блокировки",
+      "recommendation": "Внедрить IP/User-based Rate Limiting (например, 100 req/min) с экспоненциальным backoff",
+      "source": "OWASP API Security Top 10 #7",
+      "link": "https://owasp.org/API-Security/editions/2023/en/0xa4-unrestricted-resource-consumption/"
+    },
+    {
+      "code": "INJ-001",
+      "name": "Injection (SQL/NoSQL/Command)",
+      "description": "Инъекционные атаки: выполнение вредоносных выражений через параметры запроса",
+      "severity": "CRITICAL",
+      "detection_method": "POST /search?q=' OR 1=1--",
+      "recommendation": "Использовать Parameterized Queries, Prepared Statements, ORM с escaping",
+      "source": "OWASP API Security Top 10 #8",
+      "link": "https://owasp.org/API-Security/editions/2019/en/0-a8-injection/"
+    },
+    {
+      "code": "CONF-001",
+      "name": "Security Misconfiguration",
+      "description": "Небезопасная конфигурация: открытые админ-панели, слабые заголовки, CORS *",
+      "severity": "MEDIUM",
+      "detection_method": "GET /admin, OPTIONS /api с Origin: evil.com",
+      "recommendation": "Закрыть неиспользуемые эндпоинты, настроить CSP, X-Frame-Options, Strict CORS",
+      "source": "OWASP API Security Top 10 #9",
+      "link": "https://owasp.org/API-Security/editions/2023/en/0xa8-security-misconfiguration/"
+    },
+    {
+      "code": "ASSET-001",
+      "name": "Improper Assets Management",
+      "description": "Устаревшие API версии и забытые эндпоинты остаются доступными",
+      "severity": "MEDIUM",
+      "detection_method": "GET /api/v1/old-endpoint (deprecated)",
+      "recommendation": "Реализовать API Versioning с авто-депрекейшеном (6 месяцев), мониторинг неиспользуемых эндпоинтов",
+      "source": "OWASP API Security Top 10 #10",
+      "link": "https://owasp.org/API-Security/editions/2023/en/0xa9-improper-inventory-management/"
+    },
+    {
+      "code": "SSRF-001",
+      "name": "Server-Side Request Forgery",
+      "description": "Принуждение сервера выполнять запросы к внутренним/внешним ресурсам от имени атакующего",
+      "severity": "CRITICAL",
+      "detection_method": "POST /api/fetch?url=http://169.254.169.254/metadata",
+      "recommendation": "Внедрить URL Whitelist, запрет внутренних IP (RFC 1918), Network Segmentation",
+      "source": "OWASP API Security Top 10",
+      "link": "https://owasp.org/API-Security/editions/2023/en/0xa7-server-side-request-forgery/"
+    },
+    {
+      "code": "TLS-001",
+      "name": "Insecure Communication",
+      "description": "Отсутствие HTTPS или слабые TLS настройки: перехват трафика и токенов",
+      "severity": "CRITICAL",
+      "detection_method": "HTTP вместо HTTPS, TLS 1.0/1.1",
+      "recommendation": "Принудительный HSTS, TLS 1.3 only, сильные шифры (ECDHE + AES-GCM)",
+      "source": "OWASP API Security Top 10",
+      "link": "https://cheatsheetseries.owasp.org/cheatsheets/Transport_Layer_Protection_Cheat_Sheet.html"
+    },
+    {
+      "code": "KEYS-001",
+      "name": "API Key / Token Leakage",
+      "description": "Утечка ключей в URL, логах, репозиториях; отсутствие ротации токенов",
+      "severity": "HIGH",
+      "detection_method": "API_KEY в query string или response",
+      "recommendation": "Передача ключей в Authorization header, автоматическая ротация (90 дней), мониторинг утечек",
+      "source": "OWASP API Security Top 10",
+      "link": "https://owasp.org/API-Security/"
+    },
+    {
+      "code": "VALID-001",
+      "name": "Improper Input Validation",
+      "description": "Недостаточная валидация параметров: подмена значений для обхода логики",
+      "severity": "HIGH",
+      "detection_method": "GET /price?discount=-100 вместо 10",
+      "recommendation": "Внедрить строгую схему валидации (JSON Schema), серверную проверку всех параметров",
+      "source": "OWASP API Security Top 10",
+      "link": "https://owasp.org/API-Security/"
+    },
+    {
+      "code": "LOGIC-001",
+      "name": "Business Logic Flaws",
+      "description": "Логические ошибки: повторные транзакции, обход лимитов, race conditions",
+      "severity": "HIGH",
+      "detection_method": "Двойной POST /transfer после успешного первого",
+      "recommendation": "Внедрить Idempotency Keys, транзакционную целостность, валидацию бизнес-правил",
+      "source": "OWASP API Security Top 10",
+      "link": "https://owasp.org/API-Security/editions/2023/en/0xa6-unrestricted-access-to-sensitive-business-flows/"
+    },
+    {
+      "code": "CORS-001",
+      "name": "CORS Misconfiguration",
+      "description": "Неправильные настройки CORS: доступ с произвольных доменов",
+      "severity": "MEDIUM",
+      "detection_method": "OPTIONS /api с Origin: evil.com → Access-Control-Allow-Origin: *",
+      "recommendation": "Настроить точный whitelist доменов, валидация Origin header",
+      "source": "OWASP Testing Guide",
+      "link": "https://owasp.org/www-project-web-security-testing-guide/"
+    },
+    {
+      "code": "PATH-001",
+      "name": "Path Traversal",
+      "description": "Доступ к файлам вне разрешенной директории через ../ в параметрах",
+      "severity": "HIGH",
+      "detection_method": "GET /files/../../etc/passwd",
+      "recommendation": "Санитизация путей, chroot jail, белый список разрешенных путей",
+      "source": "OWASP Top 10 A5",
+      "link": "https://owasp.org/www-project-top-ten/2017/A5_2017-Broken_Access_Control.html"
+    },
+    {
+      "code": "XXE-001",
+      "name": "XML External Entity",
+      "description": "Обработка вредоносных XML с внешними сущностями: чтение файлов, SSRF",
+      "severity": "CRITICAL",
+      "detection_method": "POST XML с <!ENTITY xxe SYSTEM \"file:///etc/passwd\">",
+      "recommendation": "Отключить внешние сущности в XML парсере, использовать JSON",
+      "source": "OWASP Top 10 A4",
+      "link": "https://owasp.org/www-project-top-ten/2017/A4_2017-XML_External_Entities_(XXE).html"
+    },
+    {
+      "code": "DESER-001",
+      "name": "Deserialization Vulnerabilities",
+      "description": "Небезопасная десериализация: RCE через специально сформированные данные",
+      "severity": "CRITICAL",
+      "detection_method": "POST сериализованный payload с gadget chains",
+      "recommendation": "Использовать безопасные форматы (JSON), whitelist классов, не десериализовать пользовательские данные",
+      "source": "OWASP Top 10 A8",
+      "link": "https://owasp.org/www-project-top-ten/2017/A8_2017-Insecure_Deserialization.html"
+    },
+    {
+      "code": "JWT-001",
+      "name": "JWT Token Vulnerabilities",
+      "description": "Слабые JWT: alg:none, слабый ключ подписи, отсутствие валидации",
+      "severity": "HIGH",
+      "detection_method": "Изменить alg на 'none' в JWT header",
+      "recommendation": "Использовать HS256/RS256, валидировать issuer/audience/exp, короткий TTL",
+      "source": "OWASP JWT Cheat Sheet",
+      "link": "https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_Cheat_Sheet.html"
+    },
+    {
+      "code": "RACE-001",
+      "name": "Race Conditions",
+      "description": "Состояние гонки: параллельные запросы обходят проверки (двойная оплата)",
+      "severity": "HIGH",
+      "detection_method": "Параллельные POST /transfer",
+      "recommendation": "Использовать Database Locks, Optimistic Concurrency (ETag), Idempotency",
+      "source": "OWASP API Security",
+      "link": "https://owasp.org/API-Security/"
+    },
+    {
+      "code": "DEBUG-001",
+      "name": "Exposed Debug Endpoints",
+      "description": "Доступность отладочных эндпоинтов в продакшене с раскрытием информации",
+      "severity": "MEDIUM",
+      "detection_method": "GET /debug/vars, /health?verbose=true",
+      "recommendation": "Отключить debug endpoints в production, IP whitelist для dev инструментов",
+      "source": "OWASP Testing Guide",
+      "link": "https://owasp.org/www-project-web-security-testing-guide/"
+    },
+    {
+      "code": "VERS-001",
+      "name": "Versioning Vulnerabilities",
+      "description": "Доступ к устаревшим уязвимым версиям API",
+      "severity": "MEDIUM",
+      "detection_method": "GET /api/v1/users (устаревшая версия)",
+      "recommendation": "Принудительный redirect на последнюю версию, авто-депрекейшен (6 месяцев)",
+      "source": "API Security Best Practices",
+      "link": "https://owasp.org/www-project-api-security/"
+    },
+    {
+      "code": "SWAG-001",
+      "name": "API Documentation Exposure",
+      "description": "Открытый доступ к Swagger/OpenAPI документации с чувствительной информацией",
+      "severity": "MEDIUM",
+      "detection_method": "GET /swagger.json, /v2/api-docs",
+      "recommendation": "Ограничить доступ (IP whitelist, auth), удалить чувствительные примеры",
+      "source": "OWASP API Security",
+      "link": "https://owasp.org/API-Security/"
+    },
+    {
+      "code": "LOG-001",
+      "name": "Insufficient Logging & Monitoring",
+      "description": "Отсутствие логирования атак и аномалий: задержка обнаружения инцидентов",
+      "severity": "MEDIUM",
+      "detection_method": "Отсутствие логов failed logins, 4xx/5xx ошибок",
+      "recommendation": "Логировать все auth failures, аномальный трафик, интегрировать с SIEM",
+      "source": "OWASP API Security Top 10",
+      "link": "https://owasp.org/API-Security/editions/2019/en/0-a10-insufficient-logging-monitoring/"
+    },
+    {
+      "code": "ERR-001",
+      "name": "Error Message Information Disclosure",
+      "description": "Детализированные ошибки раскрывают внутреннюю информацию (стек-трейс, DB схемы)",
+      "severity": "MEDIUM",
+      "detection_method": "POST invalid data → 'Table users does not exist'",
+      "recommendation": "Внедрить Generic Error Responses, логировать детали только на сервере",
+      "source": "OWASP Top 10 A6",
+      "link": "https://owasp.org/www-project-top-ten/2017/A6_2017-Security_Misconfiguration.html"
+    },
+    {
+      "code": "XSS-001",
+      "name": "XSS via API",
+      "description": "Возврат невалидированных данных в API приводит к XSS в клиентском приложении",
+      "severity": "HIGH",
+      "detection_method": "GET /search?q=<script>alert(1)</script>",
+      "recommendation": "HTML/JS escaping в ответах, Content Security Policy (CSP)",
+      "source": "OWASP Top 10 A7",
+      "link": "https://owasp.org/www-project-top-ten/2017/A7_2017-Cross-Site_Scripting_(XSS).html"
+    },
+    {
+      "code": "CSRF-001",
+      "name": "CSRF via API",
+      "description": "Отсутствие CSRF защиты для state-changing операций",
+      "severity": "MEDIUM",
+      "detection_method": "POST /transfer без CSRF token",
+      "recommendation": "Требовать CSRF tokens для mutating requests, использовать SameSite cookies",
+      "source": "OWASP CSRF Prevention",
+      "link": "https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html"
+    },
+    {
+      "code": "OAUTH-001",
+      "name": "OAuth Misconfiguration",
+      "description": "Неправильная настройка OAuth: redirect_uri open, слабые scopes",
+      "severity": "HIGH",
+      "detection_method": "redirect_uri=evil.com в OAuth flow",
+      "recommendation": "Whitelist redirect URIs, минимальные scopes, PKCE для SPA",
+      "source": "OWASP OAuth Cheat Sheet",
+      "link": "https://cheatsheetseries.owasp.org/cheatsheets/OAuth_Cheat_Sheet.html"
+    },
+    {
+      "code": "CRYPTO-001",
+      "name": "Weak Cryptography",
+      "description": "Устаревшие алгоритмы: MD5, SHA1, RC4, слабые ключи",
+      "severity": "HIGH",
+      "detection_method": "SSL Labs scan показывает слабые шифры",
+      "recommendation": "Использовать AES-256-GCM, SHA-256+, ECDHE, 2048+ RSA ключи",
+      "source": "OWASP Cryptographic Storage",
+      "link": "https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html"
+    },
+    {
+      "code": "HSTS-001",
+      "name": "HSTS Absence",
+      "description": "Отсутствие HTTP Strict Transport Security: уязвимость к SSL stripping",
+      "severity": "MEDIUM",
+      "detection_method": "Отсутствие Strict-Transport-Security header",
+      "recommendation": "Добавить HSTS header: max-age=31536000; includeSubDomains",
+      "source": "OWASP Secure Headers",
+      "link": "https://cheatsheetseries.owasp.org/cheatsheets/Secure_Headers_Cheat_Sheet.html"
+    },
+    {
+      "code": "CSP-001",
+      "name": "CSP Absence",
+      "description": "Отсутствие Content Security Policy: возможность XSS атак",
+      "severity": "MEDIUM",
+      "detection_method": "Отсутствие Content-Security-Policy header",
+      "recommendation": "Внедрить CSP: default-src 'self'; script-src 'self'",
+      "source": "OWASP Secure Headers",
+      "link": "https://cheatsheetseries.owasp.org/cheatsheets/Secure_Headers_Cheat_Sheet.html"
+    },
+    {
+      "code": "SMUG-001",
+      "name": "HTTP Request Smuggling",
+      "description": "Различия в парсинге HTTP: обход WAF, cache poisoning",
+      "severity": "HIGH",
+      "detection_method": "POST с Transfer-Encoding: chunked + Content-Length",
+      "recommendation": "Нормализовать HTTP парсинг, отклонить неоднозначные запросы",
+      "source": "OWASP HTTP Request Smuggling",
+      "link": "https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/15-Testing_for_HTTP_Splitting_Smuggling"
+    },
+    {
+      "code": "IDOR-001",
+      "name": "Insecure Direct Object References",
+      "description": "Предсказуемые ID объектов позволяют доступ к чужим ресурсам",
+      "severity": "HIGH",
+      "detection_method": "GET /documents/1 (последовательные ID)",
+      "recommendation": "Использовать UUID/GUID вместо последовательных ID, проверка владения",
+      "source": "OWASP Top 10 A5",
+      "link": "https://owasp.org/www-project-top-ten/2017/A5_2017-Broken_Access_Control.html"
+    },
+    {
+      "code": "SHADOW-001",
+      "name": "Shadow API",
+      "description": "Незарегистрированные/незащищенные эндпоинты в продакшене",
+      "severity": "MEDIUM",
+      "detection_method": "GET /internal/service (не в документации)",
+      "recommendation": "Полный аудит эндпоинтов, API Gateway с единой точкой входа",
+      "source": "API Security Best Practices",
+      "link": "https://owasp.org/API-Security/editions/2023/en/0xa9-improper-inventory-management/"
+    },
+    {
+      "code": "PRIV-001",
+      "name": "Privilege Escalation via API",
+      "description": "Получение повышенных привилегий через API вызовы",
+      "severity": "CRITICAL",
+      "detection_method": "POST /promote с низкими привилегиями",
+      "recommendation": "Строгая Role Hierarchy, Multi-Step Approval для эскалации",
+      "source": "OWASP API Security",
+      "link": "https://owasp.org/API-Security/"
+    },
+    {
+      "code": "JSONP-001",
+      "name": "JSONP with Untrusted Input",
+      "description": "JSONP endpoint принимает произвольный callback: XSS",
+      "severity": "HIGH",
+      "detection_method": "GET /api?callback=alert(1)",
+      "recommendation": "Отключить JSONP, использовать CORS + JSON",
+      "source": "OWASP XSS Prevention",
+      "link": "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html"
+    },
+    {
+      "code": "POLL-001",
+      "name": "Prototype Pollution",
+      "description": "Загрязнение прототипов JS объектов через __proto__",
+      "severity": "HIGH",
+      "detection_method": "POST {'__proto__': {'isAdmin': true}}",
+      "recommendation": "Использовать Object.create(null), валидация ключей, deep-freeze",
+      "source": "OWASP Prototype Pollution",
+      "link": "https://cheatsheetseries.owasp.org/cheatsheets/Prototype_Pollution_Prevention_Cheat_Sheet.html"
+    },
+    {
+      "code": "REDIR-001",
+      "name": "Open Redirect via API",
+      "description": "API возвращает redirect URL без валидации: phishing",
+      "severity": "MEDIUM",
+      "detection_method": "GET /redirect?url=https://evil.com",
+      "recommendation": "Whitelist разрешенных доменов для redirect",
+      "source": "OWASP Top 10",
+      "link": "https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html"
+    }
+  ]
+}
