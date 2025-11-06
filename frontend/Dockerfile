@@ -24,14 +24,8 @@ RUN npm run build
 # Production stage
 FROM nginx:alpine AS production
 
-# Копируем nginx.conf из корня
-COPY ./nginx.conf /etc/nginx/nginx.conf
-
 # Копируем собранные файлы
 COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Удаляем дефолтный конфиг
-RUN rm -f /etc/nginx/conf.d/default.conf
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost/ || exit 1

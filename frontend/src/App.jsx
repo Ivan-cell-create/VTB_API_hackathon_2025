@@ -12,17 +12,17 @@ import './index.css';
 export default function App() {
   return (
     <Router>
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900">
+      <div className="min-h-screen flex flex-col">
         <Navbar />
         <main className="flex-1">
           <Routes>
-            <Route path="/" element={<Navigate to="/analyze" replace />} />
+            <Route path="/" element={<Navigate to="/about" replace />} />
+            <Route path="/about" element={<AboutPage />} />
             <Route path="/analyze" element={<AnalyzePage />} />
             <Route path="/report/:id" element={<ReportPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/docs" element={<DocsPage />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="*" element={<Navigate to="/analyze" replace />} />
+            <Route path="*" element={<Navigate to="/about" replace />} />
           </Routes>
         </main>
         <Footer />

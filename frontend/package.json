@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tailwindcss/typography": "^0.5.19",
     "@uiw/react-textarea-code-editor": "^3.0.0",
     "jspdf": "^3.0.3",
     "lucide-react": "^0.445.0",
