@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 import yaml
 import requests
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, HttpUrl, validator
 from tenacity import retry, stop_after_attempt, wait_fixed
@@ -167,6 +167,26 @@ async def save_plugin(name: str = Form(...), code: str = Form(...)):
         f.write(code)
 
     return {"status": "saved", "name": name}
+
+@app.post("/api/update-plugin")
+async def update_plugin(name: str = Form(...), code: str = Form(...)):
+    return await save_plugin(name=name, code=code)  # Переиспользуем save_plugin
+
+@app.get("/api/plugins/{name}")
+async def get_plugin(name: str):
+    path = os.path.join(PLUGINS_DIR, f"{name}.py")
+    if not os.path.exists(path):
+        raise HTTPException(404, "Plugin not found")
+    with open(path, 'r') as f:
+        return PlainTextResponse(f.read())
+
+@app.post("/api/delete-plugin")
+async def delete_plugin(name: str = Form(...)):
+    path = os.path.join(PLUGINS_DIR, f"{name}.py")
+    if not os.path.exists(path):
+        raise HTTPException(404, "Plugin not found")
+    os.unlink(path)
+    return {"status": "deleted", "name": name}
 
 @app.post("/api/analyze-api")
 async def analyze_api(

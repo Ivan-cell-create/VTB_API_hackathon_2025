@@ -1,0 +1,170 @@
+/* frontend/src/components/CodeEditorModal.module.css */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 50;
+}
+
+.modalContainer {
+  background-color: #111827;
+  border-radius: 1rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  width: 100%;
+  max-width: 64rem;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid #6b21a8;
+}
+
+.modalTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #c4b5fd;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.closeButton {
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.closeButton:hover {
+  background-color: #1f2937;
+}
+
+.modalBody {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.inputLabel {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #c4b5fd;
+}
+
+.inputField {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  background-color: #1f2937;
+  border: 1px solid #6b21a8;
+  border-radius: 0.5rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.inputField:focus {
+  ring: 2px solid #a78bfa;
+  border-color: transparent;
+}
+
+.inputHint {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 0.25rem;
+}
+
+.editorWrapper {
+  border: 1px solid #6b21a8;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.editorHint {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 0.25rem;
+}
+
+.statusError {
+  padding: 1rem;
+  background-color: rgba(127, 29, 29, 0.5);
+  border: 1px solid #991b1b;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.statusSuccess {
+  padding: 1rem;
+  background-color: rgba(6, 78, 59, 0.5);
+  border: 1px solid #166534;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-top: 1px solid #6b21a8;
+}
+
+.btnSecondary {
+  padding: 0.5rem 1.5rem;
+  background-color: #374151;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.btnSecondary:hover {
+  background-color: #4b5563;
+}
+
+.btnPrimary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.5rem;
+  background: linear-gradient(to right, #9333ea, #ec4899);
+  color: white;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+}
+
+.btnPrimary:hover {
+  background: linear-gradient(to right, #a855f7, #f43f5e);
+}
+
+.btnPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnSaving {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}

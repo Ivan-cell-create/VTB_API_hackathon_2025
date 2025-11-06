@@ -1,0 +1,42 @@
+<!-- frontend/index.html -->
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="VTB API Security Analyzer - автоматизированный анализ безопасности API с OWASP Spectral и xAI Grok" />
+    <meta name="theme-color" content="#9333ea" />
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="VTB API Analyzer" />
+    <meta property="og:description" content="Анализ безопасности API спецификаций с ИИ и OWASP правилами" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://vtb-api-analyzer.com" />
+    <meta property="og:image" content="/og-image.png" />
+    
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <title>VTB API Analyzer</title>
+    <style>
+      body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; }
+      #root { min-height: 100vh; }
+      .loading { display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    </style>
+  </head>
+  <body>
+    <noscript>
+      <div style="padding: 20px; text-align: center;">
+        <h1>JavaScript отключен</h1>
+        <p>Пожалуйста, включите JavaScript для работы приложения.</p>
+      </div>
+    </noscript>
+    <div id="root">
+      <div class="loading">
+        <div class="spinner"></div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

@@ -19,13 +19,14 @@ peredelka/
 │   │   │   └── AboutPage.jsx
 │   │   ├── components/
 │   │   │   ├── CodeEditorModal.jsx
-│   │   │   └── CodeEditorModal.css
+│   │   │   └── CodeEditorModal.module.css
 │   │   ├── App.jsx
 │   │   └── main.jsx
 │   ├── public/
 │   │   └── docs/
-│   │       ├── petstore.json
-│   │       └── admin_leak.yaml
+│   │       ├── user-guide.md
+|   |       ├── api-docs.md
+│   │       └── cicd.md
 │   ├── index.html
 │   └── vite.config.js
 ├── docker-compose.yaml
