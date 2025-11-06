@@ -1,1 +1,0 @@
-# VTB_API_hackathon_2025
