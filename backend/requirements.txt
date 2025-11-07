@@ -5,3 +5,4 @@ requests==2.32.3
 PyYAML==6.0.2
 tenacity==9.0.0
 python-multipart==0.0.9
+bandit==1.7.10

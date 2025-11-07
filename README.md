@@ -3,11 +3,23 @@
 ## Структура файлов
 
 ```md
-peredelka/
-├── backend/
-│   ├── app.py              # FastAPI + Spectral + Bandit + xAI
+VTB_API_hackathon_2025/
+── backend/
+│   ├── app.py
 │   ├── requirements.txt
-│   └── Dockerfile         
+│   ├── Dockerfile
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── config.py
+│   │   ├── security.py
+│   │   └── utils.py
+│   └── tools/
+│       ├── __init__.py
+│       ├── api_scanner.py     
+│       ├── kiterunner.py
+│       ├── zap.py
+│       ├── newman.py
+│       └── postman.py
 ├── frontend/
 │   ├── Dockerfile     
 │   ├── src/
