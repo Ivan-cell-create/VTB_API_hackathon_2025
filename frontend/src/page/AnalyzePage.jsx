@@ -1,7 +1,10 @@
 // frontend/src/pages/AnalyzePage.jsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, Link, Loader2, AlertCircle, CheckCircle, XCircle, Brain, FileText, Globe, Settings, ChevronRight } from 'lucide-react';
+import {
+  Upload, Link, Loader2, AlertCircle, CheckCircle,
+  Brain, FileText, Globe, Settings, ChevronRight
+} from 'lucide-react';
 
 export default function AnalyzePage() {
   const navigate = useNavigate();
@@ -13,9 +16,7 @@ export default function AnalyzePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [progress, setProgress] = useState(0);
-  const [analysisId, setAnalysisId] = useState(null);
 
-  // Загрузка списка плагинов
   useEffect(() => {
     fetchPlugins();
   }, []);
@@ -23,6 +24,7 @@ export default function AnalyzePage() {
   const fetchPlugins = async () => {
     try {
       const res = await fetch('/api/plugins');
+      if (!res.ok) throw new Error();
       const data = await res.json();
       setAvailablePlugins(data.plugins || []);
     } catch (err) {
@@ -32,27 +34,37 @@ export default function AnalyzePage() {
 
   const handleFileChange = (e) => {
     const selected = e.target.files[0];
-    if (selected) {
-      if (selected.size > 2 * 1024 * 1024) {
-        setError('Файл слишком большой (макс. 2 МБ)');
-        return;
-      }
-      if (!selected.name.match(/\.(yaml|yml|json)$/i)) {
-        setError('Поддерживаются только YAML/JSON файлы');
-        return;
-      }
-      setFile(selected);
-      setError('');
+    if (!selected) return;
+
+    if (selected.size > 2 * 1024 * 1024) {
+      setError('Файл слишком большой (макс. 2 МБ)');
+      return;
     }
+    if (!selected.name.match(/\.(yaml|yml|json)$/i)) {
+      setError('Поддерживаются только YAML/JSON файлы');
+      return;
+    }
+
+    setFile(selected);
+    setUrl(''); // Сбрасываем URL
+    setError('');
   };
 
   const validateUrl = (input) => {
     try {
       const urlObj = new URL(input);
-      return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+      return ['http:', 'https:'].includes(urlObj.protocol);
     } catch {
       return false;
     }
+  };
+
+  const togglePlugin = (plugin) => {
+    setPlugins(prev =>
+      prev.includes(plugin)
+        ? prev.filter(p => p !== plugin)
+        : [...prev, plugin]
+    );
   };
 
   const handleSubmit = async (e) => {
@@ -74,95 +86,72 @@ export default function AnalyzePage() {
     }
 
     const formData = new FormData();
+
+    // Файл
     if (file) {
       formData.append('openapi_file', file);
-    } else {
-      formData.append('url', url);
     }
 
-    plugins.forEach(p => formData.append('plugins', p));
+    // URL + настройки
+    if (url || !file) {
+      formData.append('request', JSON.stringify({
+        url: url || null,
+        dynamic_scan: false, // можно добавить чекбокс
+        plugins,
+        ai: aiEnabled
+      }));
+    }
+
+    // Прогресс
+    const progressInterval = setInterval(() => {
+      setProgress(p => Math.min(p + 12, 85));
+    }, 700);
 
     try {
-      setProgress(20);
       const res = await fetch('/api/analyze-api', {
         method: 'POST',
-        body: formData,
+        body: formData
       });
 
+      clearInterval(progressInterval);
+      setProgress(92);
+
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || 'Ошибка анализа');
+        const err = await res.text();
+        throw new Error(err || `HTTP ${res.status}`);
       }
 
-      setProgress(60);
       const data = await res.json();
-
-      // AI анализ
-      if (aiEnabled && file) {
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-          const specText = e.target.result;
-          try {
-            const aiForm = new FormData();
-            aiForm.append('spec_data', specText.substring(0, 15000));
-            const aiRes = await fetch('/api/ai-analyze', {
-              method: 'POST',
-              body: aiForm,
-            });
-            if (aiRes.ok) {
-              const aiData = await aiRes.json();
-              data.ai_insights = aiData.ai_insights;
-            }
-          } catch (aiErr) {
-            console.error('AI analysis failed', aiErr);
-          } finally {
-            finalizeAnalysis(data);
-          }
-        };
-        reader.readAsText(file);
-      } else {
-        finalizeAnalysis(data);
-      }
-    } catch (err) {
-      setError(err.message || 'Не удалось выполнить анализ');
-      setLoading(false);
-    }
-  };
-
-  const finalizeAnalysis = (data) => {
-    setProgress(90);
-    const id = Date.now().toString(36) + Math.random().toString(36).substr(2);
-    setAnalysisId(id);
-    
-    // Сохраняем в localStorage
-    const history = JSON.parse(localStorage.getItem('analysis_history') || '[]');
-    history.unshift({
-      id,
-      timestamp: new Date().toISOString(),
-      summary: data.summary,
-      total: data.total,
-      critical: data.critical,
-      high: data.high,
-      url: url || file?.name,
-      plugins: data.plugins,
-      issues: data.issues,
-      truncated: data.truncated,
-      ai_insights: data.ai_insights || []
-    });
-    localStorage.setItem('analysis_history', JSON.stringify(history.slice(0, 50)));
-
-    setTimeout(() => {
       setProgress(100);
-      navigate(`/report/${id}`);
-    }, 600);
-  };
 
-  const togglePlugin = (plugin) => {
-    setPlugins(prev =>
-      prev.includes(plugin)
-        ? prev.filter(p => p !== plugin)
-        : [...prev, plugin]
-    );
+      // Сохраняем в историю
+      const history = JSON.parse(localStorage.getItem('analysis_history') || '[]');
+      const entry = {
+        id: data.id,
+        timestamp: new Date().toISOString(),
+        url: url || file?.name,
+        total: data.total,
+        summary: data.summary,
+        issues: data.issues,
+        truncated: data.truncated,
+        ai_insights: data.ai_insights || [],
+        plugins_used: data.plugins_used || []
+      };
+
+      history.unshift(entry);
+      localStorage.setItem('analysis_history', JSON.stringify(history.slice(0, 50)));
+
+      setTimeout(() => {
+        navigate(`/report/${data.id}`, { state: { result: entry } });
+      }, 400);
+
+    } catch (err) {
+      clearInterval(progressInterval);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+      setProgress(0);
+    }
   };
 
   return (

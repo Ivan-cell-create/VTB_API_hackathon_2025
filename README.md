@@ -43,6 +43,10 @@ VTB_API_hackathon_2025/
 │   └── vite.config.js
 ├── docker-compose.yaml
 ├── nginx.conf
+├── flake.nix
 ├── .env.example
 └── README.md                 
 ```
+
+
+curl -L https://nixos.org/nix/install | sh -s -- --daemon

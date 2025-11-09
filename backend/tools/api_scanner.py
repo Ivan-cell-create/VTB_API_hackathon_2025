@@ -51,6 +51,35 @@ def run_api_scanner(target_url: str) -> Dict[str, List[Dict]]:
                 "severity": "high"
             })
 
+        # НОВОЕ: 5. CORS misconfig (wildcard origin)
+        root = session.options(target_url, headers={"Origin": "https://evil.com"}, timeout=5)
+        if root.headers.get("Access-Control-Allow-Origin") == "*":
+            issues.append({
+                "code": "VTB_CORS_WILDCARD",
+                "message": "CORS позволяет любой origin — риск XSS/CSRF",
+                "severity": "medium"
+            })
+
+        # 6. No rate limiting (flood check)
+        for _ in range(5):
+            session.get(target_url, timeout=2)
+        r = session.get(target_url, timeout=2)
+        if r.status_code != 429:
+            issues.append({
+                "code": "VTB_NO_RATE_LIMIT",
+                "message": "Нет rate limiting — уязвим к DoS",
+                "severity": "medium"
+            })
+
+        # 7. Missing HSTS
+        r = session.get(target_url, timeout=5)
+        if "strict-transport-security" not in r.headers:
+            issues.append({
+                "code": "VTB_NO_HSTS",
+                "message": "Нет HSTS header — риск MITM",
+                "severity": "medium"
+            })
+
     except Exception as e:
         issues.append({
             "code": "SCANNER_ERROR",
@@ -61,7 +90,6 @@ def run_api_scanner(target_url: str) -> Dict[str, List[Dict]]:
     result = {"issues": issues}
     print(json.dumps(result))
     return result
-
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:

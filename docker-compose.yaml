@@ -1,4 +1,3 @@
-version: '3.9'
 
 services:
   backend:
@@ -6,7 +5,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "8080:8080"
+      - "8000:8000"  
     environment:
       - XAI_API_KEY=${XAI_API_KEY:-}
       - PYTHONPATH=/app
@@ -14,19 +13,21 @@ services:
       - ./backend:/app
       - plugins:/tmp/plugins
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 10s
       timeout: 5s
       retries: 15
-      start_period: 60s   # ← КРИТИЧНО! ZAP грузится ~45–55 сек
+      start_period: 60s
     restart: unless-stopped
+    networks:
+      - app-network
 
   frontend:
     build:
       context: .
       dockerfile: frontend/Dockerfile
       args:
-        - VITE_API_URL=http://backend:8080
+        - VITE_API_URL=http://backend:8000 
     ports:
       - "8082:80"
     depends_on:
@@ -39,6 +40,8 @@ services:
       retries: 5
       start_period: 10s
     restart: unless-stopped
+    networks:
+      - app-network
 
   nginx:
     image: nginx:alpine
@@ -52,16 +55,21 @@ services:
       backend:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      test: ["CMD", "curl", "-f", "http://backend:8000/health"] 
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 15s
     restart: unless-stopped
+    networks:
+      - app-network
 
 volumes:
   plugins:
 
 networks:
-  default:
+  app-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16

@@ -1,6 +1,9 @@
 // frontend/src/pages/SettingsPage.jsx
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, AlertCircle, CheckCircle, Code, Settings, Loader2, FileCode } from 'lucide-react';
+import {
+  Plus, Trash2, Edit2, AlertCircle, CheckCircle,
+  Code, Settings, Loader2, FileCode
+} from 'lucide-react';
 import CodeEditorModal from '../components/CodeEditorModal';
 
 export default function SettingsPage() {
@@ -13,7 +16,6 @@ export default function SettingsPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Загрузка плагинов
   useEffect(() => {
     fetchPlugins();
   }, []);
@@ -21,6 +23,7 @@ export default function SettingsPage() {
   const fetchPlugins = async () => {
     try {
       const res = await fetch('/api/plugins');
+      if (!res.ok) throw new Error();
       const data = await res.json();
       setPlugins(data.plugins || []);
     } catch (err) {
@@ -55,17 +58,15 @@ export default function SettingsPage() {
 
   const handleDelete = async (name) => {
     if (!confirm(`Удалить плагин "${name}"?`)) return;
-    
+
     try {
-      const formData = new FormData();
-      formData.append('name', name);
-      const res = await fetch('/api/delete-plugin', {
-        method: 'POST',
-        body: formData
+      const res = await fetch(`/api/plugins/${name}`, {
+        method: 'DELETE'
       });
       if (!res.ok) throw new Error();
       setSuccess(`Плагин "${name}" удалён`);
       fetchPlugins();
+      setTimeout(() => setSuccess(''), 2000);
     } catch {
       setError('Не удалось удалить плагин');
     }
@@ -76,39 +77,54 @@ export default function SettingsPage() {
     setSuccess('');
     setIsSaving(true);
 
-    if (!name.trim() || !code.trim()) {
-      setError('Имя и код обязательны');
+    // Валидация
+    if (!name.trim()) {
+      setError('Введите имя плагина');
+      setIsSaving(false);
+      return;
+    }
+    if (!code.trim()) {
+      setError('Код не может быть пустым');
+      setIsSaving(false);
+      return;
+    }
+    if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
+      setError('Имя: только буквы, цифры, _, -');
       setIsSaving(false);
       return;
     }
 
-    if (name.includes('.') || name.includes('/')) {
-      setError('Имя не должно содержать точки или слеши');
-      setIsSaving(false);
-      return;
-    }
+    const blob = new Blob([code], { type: 'text/python' });
+    const file = new File([blob], `${name}.py`, { type: 'text/python' });
+    const formData = new FormData();
+    formData.append('plugin_file', file);
 
     try {
-      const formData = new FormData();
-      formData.append('name', name);
-      formData.append('code', code);
+      let url = '/api/plugins';
+      let method = 'POST';
 
-      const endpoint = editingPlugin ? '/api/update-plugin' : '/api/save-plugin';
-      const res = await fetch(endpoint, {
-        method: 'POST',
+      if (editingPlugin) {
+        url = `/api/plugins/${name}`;
+        method = 'PUT';
+      }
+
+      const res = await fetch(url, {
+        method,
         body: formData
       });
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || 'Ошибка сохранения');
+        const err = await res.text();
+        throw new Error(err || 'Ошибка сервера');
       }
 
-      setSuccess(editingPlugin ? 'Плагин обновлён' : 'Плагин создан');
-      setModalOpen(false);
+      setSuccess(editingPlugin ? 'Плагин обновлён!' : 'Плагин создан!');
       fetchPlugins();
+      setTimeout(() => {
+        setModalOpen(false);
+      }, 1500);
     } catch (err) {
-      setError(err.message || 'Ошибка сохранения');
+      setError(err.message);
     } finally {
       setIsSaving(false);
     }
@@ -134,6 +150,20 @@ export default function SettingsPage() {
             Создать плагин
           </button>
         </div>
+
+        {/* Уведомления */}
+        {error && (
+          <div className="max-w-2xl mx-auto mb-6 p-4 bg-red-900 bg-opacity-60 backdrop-blur-xl rounded-xl border border-red-700 flex items-center gap-3">
+            <AlertCircle className="w-6 h-6 text-red-400" />
+            <p className="text-red-300">{error}</p>
+          </div>
+        )}
+        {success && (
+          <div className="max-w-2xl mx-auto mb-6 p-4 bg-emerald-900 bg-opacity-60 backdrop-blur-xl rounded-xl border border-emerald-700 flex items-center gap-3">
+            <CheckCircle className="w-6 h-6 text-emerald-400" />
+            <p className="text-emerald-300">{success}</p>
+          </div>
+        )}
 
         {/* Список плагинов */}
         <div className="max-w-5xl mx-auto">
